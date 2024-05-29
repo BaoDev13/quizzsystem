@@ -1,60 +1,85 @@
-import Index from "views/Index.js";
-import Profile from "views/examples/Profile.js";
-import Maps from "views/examples/Maps.js";
-import Register from "views/examples/Register.js";
-import Login from "views/examples/Login.js";
-import Tables from "views/examples/Tables.js";
-import Icons from "views/examples/Icons.js";
+import Dashboard from "views/Dashboard.js";
+import CreateQuestion from "views/pages/CreateQuestion.js";
+import CreateTopics from "views/pages/CreateTopic";
+import ChangePassword from "views/pages/ChangePassword";
+import Login from "views/pages/Login";
+import ManageDailyQuestion from "views/pages/ManageDailyQuestion";
+import ManageHistoricalQuestion from "views/pages/ManageHistoricalQuestion";
+import ManageExamQuestion from "views/pages/ManageExamQuestion";
+import ManageMathQuestion from "views/pages/ManageMathQuestion";
+import ViewUser from "views/pages/ViewUser";
 
 var routes = [
   {
-    path: "/index",
+    path: "/dashboard",
     name: "Dashboard",
     icon: "ni ni-tv-2 text-primary",
-    component: <Index />,
+    component: <Dashboard />,
     layout: "/admin",
   },
   {
-    path: "/icons",
-    name: "Icons",
+    path: "/create-question",
+    name: "Create question",
     icon: "ni ni-planet text-blue",
-    component: <Icons />,
+    component: <CreateQuestion />,
     layout: "/admin",
   },
   {
-    path: "/maps",
-    name: "Maps",
+    path: "/daily-quiz",
+    name: "Manage Daily Quiz",
+    icon: "ni ni-planet text-blue",
+    component: <ManageDailyQuestion />,
+    layout: "/admin",
+  },
+  {
+    path: "/historical-quiz",
+    name: "Manage Historical Quiz",
     icon: "ni ni-pin-3 text-orange",
-    component: <Maps />,
+    component: <ManageHistoricalQuestion />,
     layout: "/admin",
   },
   {
-    path: "/user-profile",
-    name: "User Profile",
-    icon: "ni ni-single-02 text-yellow",
-    component: <Profile />,
+    path: "/exam-quiz",
+    name: "Manage Exam Quiz",
+    icon: "ni ni-pin-3 text-orange",
+    component: <ManageExamQuestion />,
     layout: "/admin",
   },
   {
-    path: "/tables",
-    name: "Tables",
+    path: "/math-quiz",
+    name: "Manage Math Quiz",
+    icon: "ni ni-pin-3 text-orange",
+    component: <ManageMathQuestion />,
+    layout: "/admin",
+  },
+  {
+    path: "/view-user",
+    name: "ViewUser",
+    icon: "ni ni-key-25 text-info",
+    component: <ViewUser />,
+    layout: "/admin",
+  },
+  {
+    path: "/change-password",
+    name: "Chang Password",
     icon: "ni ni-bullet-list-67 text-red",
-    component: <Tables />,
+    component: <ChangePassword />,
     layout: "/admin",
   },
+
   {
     path: "/login",
     name: "Login",
-    icon: "ni ni-key-25 text-info",
+    icon: "ni ni-bullet-list-67 text-red",
     component: <Login />,
     layout: "/auth",
   },
   {
-    path: "/register",
-    name: "Register",
-    icon: "ni ni-circle-08 text-pink",
-    component: <Register />,
-    layout: "/auth",
+    path: "/create-topic",
+    name: "Create Topics",
+    icon: "ni ni-planet text-blue",
+    component: <CreateTopics />,
+    layout: "/admin",
   },
 ];
 export default routes;

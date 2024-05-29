@@ -1,6 +1,6 @@
 import { Button, Container, Row, Col } from "reactstrap";
 
-const UserHeader = () => {
+const ProfileHeader = () => {
   return (
     <>
       <div
@@ -39,4 +39,4 @@ const UserHeader = () => {
   );
 };
 
-export default UserHeader;
+export default ProfileHeader;

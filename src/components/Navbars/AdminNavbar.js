@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link  } from "react-router-dom";
+import { doSignOut } from "../../firebase/auth";
 // reactstrap components
 import {
   DropdownMenu,
@@ -16,8 +17,32 @@ import {
   Container,
   Media,
 } from "reactstrap";
+import React, { useState, useEffect } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../../firebase/firebase";
+
+
 
 const AdminNavbar = (props) => {
+
+  const [user, setUser] = useState(null);
+
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth,(currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  },[])
+
+  const handleLogout = async  () => {
+    try{
+      await doSignOut();
+    }catch (error){
+      console.error("Error logging out: ", error)
+    }
+  };
+
   return (
     <>
       <Navbar className="navbar-top navbar-dark" expand="md" id="navbar-main">
@@ -28,31 +53,22 @@ const AdminNavbar = (props) => {
           >
             {props.brandText}
           </Link>
-          <Form className="navbar-search navbar-search-dark form-inline mr-3 d-none d-md-flex ml-lg-auto">
-            <FormGroup className="mb-0">
-              <InputGroup className="input-group-alternative">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>
-                    <i className="fas fa-search" />
-                  </InputGroupText>
-                </InputGroupAddon>
-                <Input placeholder="Search" type="text" />
-              </InputGroup>
-            </FormGroup>
-          </Form>
           <Nav className="align-items-center d-none d-md-flex" navbar>
             <UncontrolledDropdown nav>
               <DropdownToggle className="pr-0" nav>
                 <Media className="align-items-center">
                   <span className="avatar avatar-sm rounded-circle">
-                    <img
+                    {user && user.photoURL ? (
+                      <img alt="..." src={user.photoURL}/>
+                    ):(<img
                       alt="..."
-                      src={require("../../assets/img/theme/team-4-800x800.jpg")}
-                    />
+                      src={require("../../assets/img/icons/admin.png")}
+                    />)}
+                    
                   </span>
                   <Media className="ml-2 d-none d-lg-block">
                     <span className="mb-0 text-sm font-weight-bold">
-                      Jessica Jones
+                      <strong>Hi, Admin</strong>
                     </span>
                   </Media>
                 </Media>
@@ -61,24 +77,12 @@ const AdminNavbar = (props) => {
                 <DropdownItem className="noti-title" header tag="div">
                   <h6 className="text-overflow m-0">Welcome!</h6>
                 </DropdownItem>
-                <DropdownItem to="/admin/user-profile" tag={Link}>
-                  <i className="ni ni-single-02" />
-                  <span>My profile</span>
-                </DropdownItem>
-                <DropdownItem to="/admin/user-profile" tag={Link}>
+                <DropdownItem to="/admin/change-password" tag={Link}>
                   <i className="ni ni-settings-gear-65" />
-                  <span>Settings</span>
-                </DropdownItem>
-                <DropdownItem to="/admin/user-profile" tag={Link}>
-                  <i className="ni ni-calendar-grid-58" />
-                  <span>Activity</span>
-                </DropdownItem>
-                <DropdownItem to="/admin/user-profile" tag={Link}>
-                  <i className="ni ni-support-16" />
-                  <span>Support</span>
-                </DropdownItem>
+                  <span>Change password</span>
+                </DropdownItem>             
                 <DropdownItem divider />
-                <DropdownItem href="#pablo" onClick={(e) => e.preventDefault()}>
+                <DropdownItem href="#pablo" onClick={() =>  handleLogout()}>
                   <i className="ni ni-user-run" />
                   <span>Logout</span>
                 </DropdownItem>
