@@ -17,7 +17,7 @@ const Admin = (props) => {
   }, [location]);
 
   const getRoutes = (routes) => {
-    return routes.map((prop, key) => {
+    return routes.slice(0, 7).map((prop, key) => {
       if (prop.layout === "/admin") {
         return (
           <Route path={prop.path} element={prop.component} key={key} exact />
@@ -29,12 +29,14 @@ const Admin = (props) => {
   };
 
   const getBrandText = (path) => {
-    for (let i = 0; i < routes.length; i++) {
+    const filteredRoutes = routes.slice(0, 7);
+    for (let i = 0; i < filteredRoutes.length; i++) {
       if (
-        props?.location?.pathname.indexOf(routes[i].layout + routes[i].path) !==
-        -1
+        props?.location?.pathname.indexOf(
+          filteredRoutes[i].layout + filteredRoutes[i].path
+        ) !== -1
       ) {
-        return routes[i].name;
+        return filteredRoutes[i].name;
       }
     }
     return "Brand";
@@ -44,10 +46,10 @@ const Admin = (props) => {
     <>
       <Sidebar
         {...props}
-        routes={routes}
+        routes={routes.slice(0, 7)}
         logo={{
           innerLink: "/admin/dashboard",
-          imgSrc: require("../assets/img/icons/logoquiz.png"),
+          imgSrc: require("../assets/img/brand/logo.png"),
           imgAlt: "...",
         }}
       />

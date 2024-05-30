@@ -78,7 +78,7 @@ const Sidebar = (props) => {
           <span className="navbar-toggler-icon" />
         </button>
         {logo ? (
-          <NavbarBrand className="pt-0" {...navbarBrandProps}>
+          <NavbarBrand className="p-0" {...navbarBrandProps}>
             <img
               alt={logo.imgAlt}
               className="navbar-brand-img"
