@@ -1,10 +1,9 @@
 import Dashboard from "views/Dashboard.js";
-import CreateQuestion from "views/pages/CreateQuestion.js";
 import CreateTopics from "views/pages/CreateTopic";
 import ChangePassword from "views/pages/ChangePassword";
 import Login from "views/pages/Login";
 import ManageDailyQuestion from "views/pages/ManageDailyQuestion";
-import ManageHistoricalQuestion from "views/pages/ManageHistoricalQuestion";
+import ManageTrueFalseQuiz from "views/pages/ManageTrueFalseQuestion";
 import ManageExamQuestion from "views/pages/ManageExamQuestion";
 import ManageMathQuestion from "views/pages/ManageMathQuestion";
 import ViewUser from "views/pages/ViewUser";
@@ -18,31 +17,17 @@ var routes = [
     layout: "/admin",
   },
   {
-    path: "/create-question",
-    name: "Create question",
-    icon: "ni ni-planet text-blue",
-    component: <CreateQuestion />,
-    layout: "/admin",
-  },
-  {
     path: "/daily-quiz",
     name: "Manage Daily Quiz",
-    icon: "ni ni-planet text-blue",
+    icon: "fa fa-list-alt text-blue",
     component: <ManageDailyQuestion />,
     layout: "/admin",
   },
   {
-    path: "/historical-quiz",
-    name: "Manage Historical Quiz",
+    path: "/true_false-quiz",
+    name: "Manage True/False Quiz",
     icon: "ni ni-pin-3 text-orange",
-    component: <ManageHistoricalQuestion />,
-    layout: "/admin",
-  },
-  {
-    path: "/exam-quiz",
-    name: "Manage Exam Quiz",
-    icon: "ni ni-pin-3 text-orange",
-    component: <ManageExamQuestion />,
+    component: <ManageTrueFalseQuiz />,
     layout: "/admin",
   },
   {
@@ -50,6 +35,13 @@ var routes = [
     name: "Manage Math Quiz",
     icon: "ni ni-pin-3 text-orange",
     component: <ManageMathQuestion />,
+    layout: "/admin",
+  },
+  {
+    path: "/exam-quiz",
+    name: "Manage Exam Quiz",
+    icon: "ni ni-pin-3 text-orange",
+    component: <ManageExamQuestion />,
     layout: "/admin",
   },
   {

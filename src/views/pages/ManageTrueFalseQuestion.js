@@ -23,10 +23,14 @@ import {
   DropdownItem,
   Dropdown,
   DropdownToggle,
+  Modal,
+  ModalHeader,
+  ModalBody,
 } from "reactstrap";
 import { ToastContainer, toast } from "react-toastify";
+import CreateQuestion from "./CreateQuestion";
 
-const ManageHistoricalQuiz = () => {
+const ManageTrueFalseQuiz = () => {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -34,51 +38,55 @@ const ManageHistoricalQuiz = () => {
   const [editingQuestionId, setEditingQuestionId] = useState(null);
   const [editedQuestion, setEditedQuestion] = useState({
     question: "",
-    answers: { A: "", B: "", C: "", D: "" },
+    answers: { A: "", B: "" },
     correct_answer: "",
   });
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [quizType, setQuizType] = useState("");
+
   const toggleDropdown = () => setDropdownOpen((prevState) => !prevState);
+  const toggleModal = () => setModalOpen((prevState) => !prevState);
+
+  const fetchQuestions = async () => {
+    try {
+      const questionsRef = collection(db, "quizpapers/ppr002/questions");
+      const questionsSnapshot = await getDocs(questionsRef);
+      const data = [];
+
+      for (const questionDoc of questionsSnapshot.docs) {
+        const questionData = questionDoc.data();
+        const questionId = questionDoc.id;
+
+        const answersRef = collection(
+          db,
+          `quizpapers/ppr002/questions/${questionId}/answers`
+        );
+        const answersSnapshot = await getDocs(answersRef);
+        const answersData = {};
+
+        answersSnapshot.forEach((answerDoc) => {
+          const answerData = answerDoc.data();
+          answersData[answerDoc.id] = answerData.answer;
+        });
+
+        const questionWithAnswers = {
+          id: questionId,
+          ...questionData,
+          answers: answersData,
+        };
+        data.push(questionWithAnswers);
+      }
+
+      setQuestions(data);
+      setLoading(false);
+    } catch (error) {
+      toast.error("Error fetching questions: ", error);
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const questionsRef = collection(db, "quizpapers/ppr002/questions");
-        const questionsSnapshot = await getDocs(questionsRef);
-        const data = [];
-
-        for (const questionDoc of questionsSnapshot.docs) {
-          const questionData = questionDoc.data();
-          const questionId = questionDoc.id;
-
-          const answersRef = collection(
-            db,
-            `quizpapers/ppr002/questions/${questionId}/answers`
-          );
-          const answersSnapshot = await getDocs(answersRef);
-          const answersData = {};
-
-          answersSnapshot.forEach((answerDoc) => {
-            const answerData = answerDoc.data();
-            answersData[answerDoc.id] = answerData.answer;
-          });
-
-          const questionWithAnswers = {
-            id: questionId,
-            ...questionData,
-            answers: answersData,
-          };
-          data.push(questionWithAnswers);
-        }
-
-        setQuestions(data);
-        setLoading(false);
-      } catch (error) {
-        toast.error("Error fetching questions: ", error);
-        setLoading(false);
-      }
-    };
-
     fetchQuestions();
   }, []);
 
@@ -167,6 +175,10 @@ const ManageHistoricalQuiz = () => {
     setEditedQuestion({ ...editedQuestion, correct_answer: correctAnswer });
   };
 
+  const onQuestionCreated = () => {
+    fetchQuestions();
+  };
+
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const indexOfLastQuestion = currentPage * questionsPerPage;
@@ -178,16 +190,18 @@ const ManageHistoricalQuiz = () => {
 
   return (
     <>
-      <div className="header bg-gradient-info pb-8 pt-5 pt-md-8">
-        <Container fluid>
-          <div className="header-body"></div>
-        </Container>
-      </div>
+      <div className="header bg-gradient-info pb-8 pt-5 pt-md-8"></div>
       <Container className="mt--7" fluid>
         <Card className="bg-secondary shadow">
           <CardHeader className="bg-transparent border-0">
-            <h3 className="mb-0">Manage Historical Quiz</h3>
-            <Button color="primary" href="#create-question">
+            <h2 className="mb-5">Manage True False Quiz</h2>
+            <Button
+              color="primary"
+              onClick={() => {
+                setQuizType("True False Quiz");
+                toggleModal();
+              }}
+            >
               Create Question
             </Button>
           </CardHeader>
@@ -198,8 +212,6 @@ const ManageHistoricalQuiz = () => {
                 <th scope="col">Question</th>
                 <th scope="col">Option A</th>
                 <th scope="col">Option B</th>
-                <th scope="col">Option C</th>
-                <th scope="col">Option D</th>
                 <th scope="col">Answer</th>
                 <th scope="col">Action</th>
               </tr>
@@ -254,32 +266,6 @@ const ManageHistoricalQuiz = () => {
                         question.answers && question.answers.B
                       )}
                     </td>
-                    <td style={{ minWidth: "200px" }}>
-                      {editingQuestionId === question.id ? (
-                        <Input
-                          type="textarea"
-                          name="C"
-                          value={editedQuestion.answers.C}
-                          onChange={handleAnswerChange}
-                          style={{ width: "100%" }}
-                        />
-                      ) : (
-                        question.answers && question.answers.C
-                      )}
-                    </td>
-                    <td style={{ minWidth: "200px" }}>
-                      {editingQuestionId === question.id ? (
-                        <Input
-                          type="textarea"
-                          name="D"
-                          value={editedQuestion.answers.D}
-                          onChange={handleAnswerChange}
-                          style={{ width: "100%" }}
-                        />
-                      ) : (
-                        question.answers && question.answers.D
-                      )}
-                    </td>
                     <td style={{ minWidth: "150px" }}>
                       {editingQuestionId === question.id ? (
                         <FormGroup>
@@ -291,7 +277,7 @@ const ManageHistoricalQuiz = () => {
                               {editedQuestion.correct_answer || "Select Answer"}
                             </DropdownToggle>
                             <DropdownMenu>
-                              {["A", "B", "C", "D"].map((answer) => (
+                              {["A", "B"].map((answer) => (
                                 <DropdownItem
                                   key={answer}
                                   onClick={() =>
@@ -350,38 +336,49 @@ const ManageHistoricalQuiz = () => {
               )}
             </tbody>
           </Table>
-          <Pagination>
-            <PaginationItem disabled={currentPage <= 1}>
-              <PaginationLink
-                previous
-                onClick={() => paginate(currentPage - 1)}
-              />
-            </PaginationItem>
-            {[
-              ...Array(Math.ceil(questions.length / questionsPerPage)).keys(),
-            ].map((number) => (
-              <PaginationItem
-                key={number + 1}
-                active={number + 1 === currentPage}
-              >
-                <PaginationLink onClick={() => paginate(number + 1)}>
-                  {number + 1}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-            <PaginationItem
-              disabled={
-                currentPage >= Math.ceil(questions.length / questionsPerPage)
-              }
-            >
-              <PaginationLink next onClick={() => paginate(currentPage + 1)} />
-            </PaginationItem>
-          </Pagination>
         </Card>
+        <Pagination>
+          <PaginationItem disabled={currentPage <= 1}>
+            <PaginationLink
+              previous
+              onClick={() => paginate(currentPage - 1)}
+            />
+          </PaginationItem>
+          {[
+            ...Array(Math.ceil(questions.length / questionsPerPage)).keys(),
+          ].map((number) => (
+            <PaginationItem
+              key={number + 1}
+              active={number + 1 === currentPage}
+            >
+              <PaginationLink onClick={() => paginate(number + 1)}>
+                {number + 1}
+              </PaginationLink>
+            </PaginationItem>
+          ))}
+          <PaginationItem
+            disabled={
+              currentPage >= Math.ceil(questions.length / questionsPerPage)
+            }
+          >
+            <PaginationLink next onClick={() => paginate(currentPage + 1)} />
+          </PaginationItem>
+        </Pagination>
       </Container>
+      <Modal className="modal-lg " isOpen={modalOpen} toggle={toggleModal}>
+        <ModalHeader toggle={toggleModal}></ModalHeader>
+        <ModalBody>
+          <CreateQuestion
+            toggleModal={toggleModal}
+            quizType={quizType}
+            onQuestionCreated={onQuestionCreated}
+          />
+        </ModalBody>
+      </Modal>
+
       <ToastContainer autoClose={1000} />
     </>
   );
 };
 
-export default ManageHistoricalQuiz;
+export default ManageTrueFalseQuiz;

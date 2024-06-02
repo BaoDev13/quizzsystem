@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../firebase/firebase";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
-import { Card, CardHeader, Container, Table } from "reactstrap";
+import { Card, CardHeader, Container, Table, Spinner } from "reactstrap";
 import { toast, ToastContainer } from "react-toastify";
 
 const ViewUser = () => {
   const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -21,9 +22,10 @@ const ViewUser = () => {
           profilepic: doc.data().profilepic,
         }));
         setUsers(userData);
+        setLoading(false);
       } catch (error) {
-        console.error("Error fetching users: ", error);
-        toast.error("Error fetching users");
+        toast.error("Error fetching users: ", error);
+        setLoading(false);
       }
     };
 
@@ -52,24 +54,32 @@ const ViewUser = () => {
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => (
-                <tr key={user.id}>
-                  <td>{user.index}</td>
-                  <td>
-                    {user.profilepic ? (
-                      <img
-                        src={user.profilepic}
-                        alt={user.name}
-                        style={{ width: 50, borderRadius: "50%" }}
-                      />
-                    ) : (
-                      "No Photo"
-                    )}
+              {loading ? (
+                <tr>
+                  <td colSpan="8" className="text-center">
+                    <Spinner color="info" />
                   </td>
-                  <td>{user.name}</td>
-                  <td>{user.email}</td>
                 </tr>
-              ))}
+              ) : (
+                users.map((user) => (
+                  <tr key={user.id}>
+                    <td>{user.index}</td>
+                    <td>
+                      {user.profilepic ? (
+                        <img
+                          src={user.profilepic}
+                          alt={user.name}
+                          style={{ width: 50, borderRadius: "50%" }}
+                        />
+                      ) : (
+                        "No Photo"
+                      )}
+                    </td>
+                    <td>{user.name}</td>
+                    <td>{user.email}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </Table>
         </Card>

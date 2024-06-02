@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../../firebase/firebase";
-import { collection, addDoc, getDocs, setDoc, doc } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  setDoc,
+  doc,
+  getDoc,
+  updateDoc,
+} from "firebase/firestore";
 import {
   Button,
   Card,
@@ -21,8 +29,8 @@ import {
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const CreateQuestion = () => {
-  const [type, setType] = useState("");
+const CreateQuestion = ({ toggleModal, quizType, onQuestionCreated }) => {
+  const [type, setType] = useState(quizType || "");
   const [correctAnswer, setCorrectAnswer] = useState("");
   const [typeData, setTypeData] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -80,6 +88,11 @@ const CreateQuestion = () => {
       );
       const questionId = questionRef.id;
 
+      const countDocRef = doc(db, `quizpapers/${selectedQuizPaper.id}`);
+      const countDocSnap = await getDoc(countDocRef);
+      const currentCount = countDocSnap.data().questions_count || 0;
+      await updateDoc(countDocRef, { questions_count: currentCount + 1 });
+
       // Thêm các câu trả lời vào collection "answers" trong document của câu hỏi với ID mới
       for (let [identifier, answer] of Object.entries(answers)) {
         console.log(answer);
@@ -99,6 +112,8 @@ const CreateQuestion = () => {
       setQuestion("");
       setAnswers({ A: "", B: "", C: "", D: "" });
       setCorrectAnswer("");
+      toggleModal();
+      onQuestionCreated();
     } catch (error) {
       console.error("Error adding document: ", error);
       toast.error("Thêm câu hỏi mới thất bại!");
@@ -107,13 +122,9 @@ const CreateQuestion = () => {
 
   return (
     <>
-      <div className="header bg-gradient-info pb-8 pt-5 pt-md-8">
-        <Container fluid>
-          <div className="header-body">{/* Card stats */}</div>
-        </Container>
-      </div>
+      <div className="header pt-1 md-8"></div>
       <Container className="mt--7" fluid>
-        <Card className="bg-secondary shadow">
+        <Card className="bg-secondary-info shadow">
           <CardHeader className="bg-transparent border-0">
             <h3 className="mb-0">Thêm câu hỏi mới</h3>
           </CardHeader>
@@ -194,10 +205,12 @@ const CreateQuestion = () => {
               </Row>
 
               <FormGroup>
-                <Label for="correctAnswer">Đáp án đúng</Label>
+                <Label for="correctAnswer" className="mr-6">
+                  Answer:
+                </Label>
                 <Dropdown isOpen={dropdownAnswerOpen} toggle={toggleAnswer}>
                   <DropdownToggle caret>
-                    {correctAnswer || "Chọn đáp án đúng"}
+                    {correctAnswer || "Choose answer"}
                   </DropdownToggle>
                   <DropdownMenu>
                     {["A", "B", "C", "D"].map((option, index) => (
@@ -213,8 +226,10 @@ const CreateQuestion = () => {
               </FormGroup>
 
               <FormGroup>
-                <Label for="questionType">Loại câu hỏi</Label>
-                <Dropdown isOpen={dropdownOpen} toggle={toggle}>
+                <Label for="quizType" className="mr-4">
+                  Type question:
+                </Label>
+                <Dropdown isOpen={dropdownOpen} toggle={toggle} disabled>
                   <DropdownToggle caret>
                     {type || "Hãy chọn loại câu hỏi"}
                   </DropdownToggle>
@@ -232,7 +247,7 @@ const CreateQuestion = () => {
               </FormGroup>
 
               <Button type="submit" color="primary">
-                Thêm câu hỏi
+                Add question
               </Button>
             </Form>
           </CardBody>
