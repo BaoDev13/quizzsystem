@@ -20,6 +20,7 @@ const ViewUser = () => {
           email: doc.data().email,
           name: doc.data().name,
           profilepic: doc.data().profilepic,
+          createdAt: doc.data().createdAt.toDate(),
         }));
         setUsers(userData);
         setLoading(false);
@@ -48,9 +49,10 @@ const ViewUser = () => {
             <thead className="thead-light">
               <tr>
                 <th scope="col">#</th>
-                <th scope="col">Hình ảnh</th>
+                <th scope="col">Avatar</th>
                 <th scope="col">Name</th>
                 <th scope="col">Email</th>
+                <th scope="col">Date created</th>
               </tr>
             </thead>
             <tbody>
@@ -77,6 +79,7 @@ const ViewUser = () => {
                     </td>
                     <td>{user.name}</td>
                     <td>{user.email}</td>
+                    <td>{user.createdAt.toString()}</td>
                   </tr>
                 ))
               )}

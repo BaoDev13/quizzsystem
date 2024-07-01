@@ -1,9 +1,6 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { NavLink as NavLinkRRD, Link } from "react-router-dom";
-// nodejs library to set properties for components
 import { PropTypes } from "prop-types";
-
-// reactstrap components
 import {
   Collapse,
   Form,
@@ -21,7 +18,7 @@ import {
   Col,
 } from "reactstrap";
 
-const Sidebar = (props) => {
+const Sidebar = ({ routes, logo }) => {
   const [collapseOpen, setCollapseOpen] = useState();
 
   const toggleCollapse = () => {
@@ -32,24 +29,13 @@ const Sidebar = (props) => {
     setCollapseOpen(false);
   };
 
-  const createLinks = (routes) => {
-    return routes.map((prop, key) => {
-      return (
-        <NavItem key={key}>
-          <NavLink
-            to={prop.layout + prop.path}
-            tag={NavLinkRRD}
-            onClick={closeCollapse}
-          >
-            <i className={prop.icon} />
-            {prop.name}
-          </NavLink>
-        </NavItem>
-      );
-    });
-  };
+  const filteredRoutes = routes.filter(
+    (route) =>
+      route.name !== "Change Password" &&
+      route.name !== "Create Topics" &&
+      route.name !== "Login"
+  );
 
-  const { routes, logo } = props;
   let navbarBrandProps;
   if (logo && logo.innerLink) {
     navbarBrandProps = {
@@ -129,19 +115,28 @@ const Sidebar = (props) => {
               </InputGroupAddon>
             </InputGroup>
           </Form>
-          <Nav navbar>{createLinks(routes)}</Nav>
+          <Nav navbar>
+            {filteredRoutes.map((prop, key) => (
+              <NavItem key={key}>
+                <NavLink
+                  to={prop.layout + prop.path}
+                  tag={NavLinkRRD}
+                  onClick={closeCollapse}
+                >
+                  <i className={prop.icon} />
+                  {prop.name}
+                </NavLink>
+              </NavItem>
+            ))}
+          </Nav>
         </Collapse>
       </Container>
     </Navbar>
   );
 };
 
-Sidebar.defaultProps = {
-  routes: [{}],
-};
-
 Sidebar.propTypes = {
-  routes: PropTypes.arrayOf(PropTypes.object),
+  routes: PropTypes.arrayOf(PropTypes.object).isRequired,
   logo: PropTypes.shape({
     innerLink: PropTypes.string,
     outterLink: PropTypes.string,

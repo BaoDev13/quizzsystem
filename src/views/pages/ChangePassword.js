@@ -157,7 +157,7 @@ const ChangePassword = () => {
                 </InputGroup>
               </FormGroup>
               <Button type="submit" color="primary">
-                Change Password
+                Submit
               </Button>
             </Form>
           </CardBody>

@@ -8,7 +8,7 @@ import ManageExamQuestion from "views/pages/ManageExamQuestion";
 import ManageMathQuestion from "views/pages/ManageMathQuestion";
 import ViewUser from "views/pages/ViewUser";
 
-var routes = [
+const routes = [
   {
     path: "/dashboard",
     name: "Dashboard",
@@ -19,52 +19,44 @@ var routes = [
   {
     path: "/daily-quiz",
     name: "Manage Daily Quiz",
-    icon: "fa fa-list-alt text-blue",
+    icon: "fa fa-question text-blue",
     component: <ManageDailyQuestion />,
     layout: "/admin",
   },
   {
     path: "/true_false-quiz",
     name: "Manage True/False Quiz",
-    icon: "ni ni-pin-3 text-orange",
+    icon: "fa-solid fa-check text-orange",
     component: <ManageTrueFalseQuiz />,
     layout: "/admin",
   },
   {
     path: "/math-quiz",
     name: "Manage Math Quiz",
-    icon: "ni ni-pin-3 text-orange",
+    icon: "fa-solid fa-calculator text-orange",
     component: <ManageMathQuestion />,
     layout: "/admin",
   },
   {
     path: "/exam-quiz",
     name: "Manage Exam Quiz",
-    icon: "ni ni-pin-3 text-orange",
+    icon: "fa-solid fa-clipboard-question text-green",
     component: <ManageExamQuestion />,
     layout: "/admin",
   },
   {
     path: "/view-user",
-    name: "ViewUser",
-    icon: "ni ni-key-25 text-info",
+    name: "View User",
+    icon: "fa-solid fa-users text-info",
     component: <ViewUser />,
     layout: "/admin",
   },
   {
     path: "/change-password",
-    name: "Chang Password",
+    name: "Change Password",
     icon: "ni ni-bullet-list-67 text-red",
     component: <ChangePassword />,
     layout: "/admin",
-  },
-
-  {
-    path: "/login",
-    name: "Login",
-    icon: "ni ni-bullet-list-67 text-red",
-    component: <Login />,
-    layout: "/auth",
   },
   {
     path: "/create-topic",
@@ -73,5 +65,13 @@ var routes = [
     component: <CreateTopics />,
     layout: "/admin",
   },
+  {
+    path: "/login",
+    name: "Login",
+    icon: "ni ni-bullet-list-67 text-red",
+    component: <Login />,
+    layout: "/auth",
+  },
 ];
+
 export default routes;

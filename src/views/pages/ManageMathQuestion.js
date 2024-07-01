@@ -18,36 +18,36 @@ import {
   PaginationItem,
   PaginationLink,
   Spinner,
-  Input,
-  FormGroup,
-  DropdownMenu,
-  DropdownItem,
-  Dropdown,
-  DropdownToggle,
   Modal,
   ModalHeader,
   ModalBody,
+  FormGroup,
+  Label,
+  Input,
 } from "reactstrap";
 import { toast, ToastContainer } from "react-toastify";
-import CreateQuestion from "./CreateQuestion";
+import CreateQuestionM from "./MathQuiz/CreateQuestionM";
+import EditQuestionM from "./MathQuiz/EditQuestionM";
 
 const ManageMathQuiz = () => {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [questionsPerPage] = useState(10);
-  const [editingQuestionId, setEditingQuestionId] = useState(null);
-  const [editedQuestion, setEditedQuestion] = useState({
-    question: "",
-    answers: { A: "", B: "", C: "", D: "" },
-    correct_answer: "",
-  });
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [quizType, setQuizType] = useState("");
 
-  const toggleDropdown = () => setDropdownOpen((prevState) => !prevState);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalOpenEdit, setModalOpenEdit] = useState(false);
+  const [quizType, setQuizType] = useState("");
+  const [selectedQuestion, setSelectedQuestion] = useState(null);
+
+  const [questionsCount, setQuestionsCount] = useState(0);
+  const [timeSeconds, setTimeSeconds] = useState(0);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+
   const toggleModal = () => setModalOpen((prevState) => !prevState);
+  const toggleModalEdit = () => setModalOpenEdit((prevState) => !prevState);
+  const toggleSettingsModal = () =>
+    setSettingsModalOpen((prevState) => !prevState);
 
   const fetchQuestions = async () => {
     try {
@@ -89,7 +89,38 @@ const ManageMathQuiz = () => {
 
   useEffect(() => {
     fetchQuestions();
+    fetchQuizSettings();
   }, []);
+
+  const fetchQuizSettings = async () => {
+    try {
+      const quizSettingsDocRef = doc(db, "quizpapers/ppr003");
+      const quizSettingsDoc = await getDoc(quizSettingsDocRef);
+      if (quizSettingsDoc.exists()) {
+        const { questions_count, time_seconds } = quizSettingsDoc.data();
+        setQuestionsCount(questions_count);
+        setTimeSeconds(time_seconds);
+      } else {
+        toast.error("Quiz settings document does not exist");
+      }
+    } catch (error) {
+      toast.error("Error fetching quiz settings: " + error.message);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    try {
+      const quizSettingsDocRef = doc(db, "quizpapers/ppr003");
+      await updateDoc(quizSettingsDocRef, {
+        questions_count: questionsCount,
+        time_seconds: timeSeconds,
+      });
+      toast.success("Quiz settings updated successfully!");
+      setSettingsModalOpen(false);
+    } catch (error) {
+      toast.error("Error updating quiz settings: " + error.message);
+    }
+  };
 
   const handleDeleteQuestion = async (questionId) => {
     try {
@@ -120,64 +151,8 @@ const ManageMathQuiz = () => {
   };
 
   const handleEditQuestion = (question) => {
-    setEditingQuestionId(question.id);
-    setEditedQuestion({
-      question: question.question,
-      answers: question.answers,
-      correct_answer: question.correct_answer,
-    });
-  };
-
-  const handleSaveQuestion = async () => {
-    try {
-      const questionDocRef = doc(
-        db,
-        `quizpapers/ppr003/questions/${editingQuestionId}`
-      );
-      await updateDoc(questionDocRef, {
-        question: editedQuestion.question,
-        correct_answer: editedQuestion.correct_answer,
-      });
-
-      const answersRef = collection(
-        db,
-        `quizpapers/ppr003/questions/${editingQuestionId}/answers`
-      );
-
-      for (const [key, value] of Object.entries(editedQuestion.answers)) {
-        const answerDocRef = doc(answersRef, key);
-        await updateDoc(answerDocRef, { answer: value });
-      }
-
-      setQuestions((prevQuestions) =>
-        prevQuestions.map((question) =>
-          question.id === editingQuestionId
-            ? { ...question, ...editedQuestion }
-            : question
-        )
-      );
-      setEditingQuestionId(null);
-      toast.success("Update question successful!");
-    } catch (error) {
-      toast.error("Error saving question: ", error);
-    }
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditedQuestion({ ...editedQuestion, [name]: value });
-  };
-
-  const handleAnswerChange = (e) => {
-    const { name, value } = e.target;
-    setEditedQuestion({
-      ...editedQuestion,
-      answers: { ...editedQuestion.answers, [name]: value },
-    });
-  };
-
-  const handleCorrectAnswerChange = (correctAnswer) => {
-    setEditedQuestion({ ...editedQuestion, correct_answer: correctAnswer });
+    setSelectedQuestion(question); // Set the selected question for editing
+    toggleModalEdit(); // Open the Edit modal
   };
 
   const onQuestionCreated = () => {
@@ -207,7 +182,10 @@ const ManageMathQuiz = () => {
                 toggleModal();
               }}
             >
-              Create Question
+              <i class="fa-regular fa-square-plus"></i> Create new question
+            </Button>
+            <Button color="info" className="ml-2" onClick={toggleSettingsModal}>
+              <i class="fa-solid fa-gear"></i>
             </Button>
           </CardHeader>
           <Table className="align-items-center table-flush" responsive>
@@ -220,7 +198,17 @@ const ManageMathQuiz = () => {
                 <th scope="col">Option C</th>
                 <th scope="col">Option D</th>
                 <th scope="col">Answer</th>
-                <th scope="col">Action</th>
+                <th
+                  style={{
+                    position: "sticky",
+                    right: 0,
+                    backgroundColor: "white",
+                    zIndex: 1,
+                  }}
+                  scope="col"
+                >
+                  Action
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -234,135 +222,38 @@ const ManageMathQuiz = () => {
                 currentQuestions.map((question, index) => (
                   <tr key={question.id}>
                     <td>{index + 1 + (currentPage - 1) * questionsPerPage}</td>
+                    <td style={{ minWidth: "150px" }}>{question.question}</td>
+                    <td style={{ minWidth: "200px" }}>{question.answers.A}</td>
+                    <td style={{ minWidth: "200px" }}>{question.answers.B}</td>
+                    <td style={{ minWidth: "200px" }}>{question.answers.C}</td>
+                    <td style={{ minWidth: "200px" }}>{question.answers.D}</td>
                     <td style={{ minWidth: "150px" }}>
-                      {editingQuestionId === question.id ? (
-                        <Input
-                          type="textarea"
-                          name="question"
-                          value={editedQuestion.question}
-                          onChange={handleInputChange}
-                          style={{ width: "100%" }}
-                        />
-                      ) : (
-                        question.question
-                      )}
+                      {question.correct_answer}
                     </td>
-                    <td style={{ minWidth: "200px" }}>
-                      {editingQuestionId === question.id ? (
-                        <Input
-                          type="textarea"
-                          name="A"
-                          value={editedQuestion.answers.A}
-                          onChange={handleAnswerChange}
-                          style={{ width: "100%" }}
-                        />
-                      ) : (
-                        question.answers && question.answers.A
-                      )}
-                    </td>
-                    <td style={{ minWidth: "200px" }}>
-                      {editingQuestionId === question.id ? (
-                        <Input
-                          type="textarea"
-                          name="B"
-                          value={editedQuestion.answers.B}
-                          onChange={handleAnswerChange}
-                          style={{ width: "100%" }}
-                        />
-                      ) : (
-                        question.answers && question.answers.B
-                      )}
-                    </td>
-                    <td style={{ minWidth: "200px" }}>
-                      {editingQuestionId === question.id ? (
-                        <Input
-                          type="textarea"
-                          name="C"
-                          value={editedQuestion.answers.C}
-                          onChange={handleAnswerChange}
-                          style={{ width: "100%" }}
-                        />
-                      ) : (
-                        question.answers && question.answers.C
-                      )}
-                    </td>
-                    <td style={{ minWidth: "200px" }}>
-                      {editingQuestionId === question.id ? (
-                        <Input
-                          type="textarea"
-                          name="D"
-                          value={editedQuestion.answers.D}
-                          onChange={handleAnswerChange}
-                          style={{ width: "100%" }}
-                        />
-                      ) : (
-                        question.answers && question.answers.D
-                      )}
-                    </td>
-                    <td style={{ minWidth: "150px" }}>
-                      {editingQuestionId === question.id ? (
-                        <FormGroup>
-                          <Dropdown
-                            isOpen={dropdownOpen}
-                            toggle={toggleDropdown}
-                          >
-                            <DropdownToggle caret>
-                              {editedQuestion.correct_answer || "Select Answer"}
-                            </DropdownToggle>
-                            <DropdownMenu>
-                              {["A", "B", "C", "D"].map((answer) => (
-                                <DropdownItem
-                                  key={answer}
-                                  onClick={() =>
-                                    handleCorrectAnswerChange(answer)
-                                  }
-                                >
-                                  {answer}
-                                </DropdownItem>
-                              ))}
-                            </DropdownMenu>
-                          </Dropdown>
-                        </FormGroup>
-                      ) : (
-                        question.correct_answer
-                      )}
-                    </td>
-                    <td>
-                      {editingQuestionId === question.id ? (
-                        <>
-                          <Button
-                            color="success"
-                            size="sm"
-                            onClick={handleSaveQuestion}
-                          >
-                            Save
-                          </Button>{" "}
-                          <Button
-                            color="secondary"
-                            size="sm"
-                            onClick={() => setEditingQuestionId(null)}
-                          >
-                            Cancel
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button
-                            color="primary"
-                            size="sm"
-                            onClick={() => handleEditQuestion(question)}
-                          >
-                            Edit
-                          </Button>{" "}
-                          <Button
-                            color="danger"
-                            size="sm"
-                            onClick={() => handleDeleteQuestion(question.id)}
-                          >
-                            Delete
-                          </Button>
-                        </>
-                      )}
+                    <td
+                      style={{
+                        position: "sticky",
+                        right: 0,
+                        backgroundColor: "white",
+                        zIndex: 1,
+                      }}
+                    >
+                      <>
+                        <Button
+                          color="primary"
+                          size="sm"
+                          onClick={() => handleEditQuestion(question)}
+                        >
+                          <i class="fa-solid fa-pen-to-square"></i>
+                        </Button>
+                        <Button
+                          color="danger"
+                          size="sm"
+                          onClick={() => handleDeleteQuestion(question.id)}
+                        >
+                          <i class="fa-solid fa-trash"></i>
+                        </Button>
+                      </>
                     </td>
                   </tr>
                 ))
@@ -370,7 +261,7 @@ const ManageMathQuiz = () => {
             </tbody>
           </Table>
         </Card>
-        <Pagination>
+        <Pagination className="justify-content-end mt-3">
           <PaginationItem disabled={currentPage <= 1}>
             <PaginationLink
               previous
@@ -399,13 +290,58 @@ const ManageMathQuiz = () => {
         </Pagination>
       </Container>
       <Modal className="modal-lg " isOpen={modalOpen} toggle={toggleModal}>
-        <ModalHeader toggle={toggleModal}></ModalHeader>
+        <ModalHeader toggle={toggleModal}>Add new question</ModalHeader>
         <ModalBody>
-          <CreateQuestion
+          <CreateQuestionM
             toggleModal={toggleModal}
             quizType={quizType}
             onQuestionCreated={onQuestionCreated}
           />
+        </ModalBody>
+      </Modal>
+      {selectedQuestion && (
+        <Modal
+          className="modal-lg "
+          isOpen={modalOpenEdit}
+          toggle={toggleModalEdit}
+        >
+          <ModalHeader toggle={toggleModalEdit}>Edit question</ModalHeader>
+          <ModalBody>
+            <EditQuestionM
+              toggleModal={toggleModalEdit}
+              question={selectedQuestion}
+              fetchQuestions={fetchQuestions}
+            />
+          </ModalBody>
+        </Modal>
+      )}
+      <Modal isOpen={settingsModalOpen} toggle={toggleSettingsModal}>
+        <ModalHeader toggle={toggleSettingsModal}>Quiz Settings</ModalHeader>
+        <ModalBody>
+          <FormGroup>
+            <Label for="questionsCount">Number of Questions</Label>
+            <Input
+              type="number"
+              id="questionsCount"
+              value={questionsCount}
+              onChange={(e) => setQuestionsCount(parseInt(e.target.value))}
+            />
+          </FormGroup>
+          <FormGroup>
+            <Label for="timeSeconds">Time for Quiz (seconds)</Label>
+            <Input
+              type="number"
+              id="timeSeconds"
+              value={timeSeconds}
+              onChange={(e) => setTimeSeconds(parseInt(e.target.value))}
+            />
+          </FormGroup>
+          <Button color="primary" onClick={handleSaveSettings}>
+            Save
+          </Button>{" "}
+          <Button color="secondary" onClick={() => setSettingsModalOpen(false)}>
+            Cancel
+          </Button>
         </ModalBody>
       </Modal>
       <ToastContainer autoClose={1000} />

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { db } from "../../firebase/firebase";
+import React, { useState, useEffect } from "react";
+import { db } from "../../../firebase/firebase";
 import {
   collection,
   addDoc,
@@ -17,16 +17,100 @@ import {
   DropdownMenu,
   DropdownToggle,
   Form,
-  Input,
   FormGroup,
   Label,
   Row,
   Col,
+  Input,
 } from "reactstrap";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const CreateQuestion = ({ toggleModal, quizType, onQuestionCreated }) => {
+import { CKEditor } from "@ckeditor/ckeditor5-react";
+import {
+  ClassicEditor,
+  AccessibilityHelp,
+  Alignment,
+  Autoformat,
+  AutoImage,
+  AutoLink,
+  Autosave,
+  BlockQuote,
+  Bold,
+  CKBox,
+  CKBoxImageEdit,
+  CloudServices,
+  Code,
+  CodeBlock,
+  Essentials,
+  FindAndReplace,
+  FontBackgroundColor,
+  FontColor,
+  FontFamily,
+  FontSize,
+  FullPage,
+  GeneralHtmlSupport,
+  Heading,
+  Highlight,
+  HorizontalLine,
+  HtmlComment,
+  HtmlEmbed,
+  ImageBlock,
+  ImageCaption,
+  ImageInline,
+  ImageInsert,
+  ImageInsertViaUrl,
+  ImageResize,
+  ImageStyle,
+  ImageTextAlternative,
+  ImageToolbar,
+  ImageUpload,
+  Indent,
+  IndentBlock,
+  Italic,
+  Link,
+  LinkImage,
+  List,
+  ListProperties,
+  Markdown,
+  MediaEmbed,
+  PageBreak,
+  Paragraph,
+  PasteFromMarkdownExperimental,
+  PasteFromOffice,
+  PictureEditing,
+  RemoveFormat,
+  SelectAll,
+  ShowBlocks,
+  SourceEditing,
+  SpecialCharacters,
+  SpecialCharactersArrows,
+  SpecialCharactersCurrency,
+  SpecialCharactersEssentials,
+  SpecialCharactersLatin,
+  SpecialCharactersMathematical,
+  SpecialCharactersText,
+  Strikethrough,
+  Style,
+  Subscript,
+  Superscript,
+  Table,
+  TableCaption,
+  TableCellProperties,
+  TableColumnResize,
+  TableProperties,
+  TableToolbar,
+  TextTransformation,
+  TodoList,
+  Underline,
+  Undo,
+} from "ckeditor5";
+
+import "ckeditor5/ckeditor5.css";
+
+import "../../../assets/css/style.css";
+
+const CreateQuestionM = ({ toggleModal, quizType, onQuestionCreated }) => {
   const [type, setType] = useState(quizType || "");
   const [correctAnswer, setCorrectAnswer] = useState("");
   const [typeData, setTypeData] = useState([]);
@@ -44,11 +128,6 @@ const CreateQuestion = ({ toggleModal, quizType, onQuestionCreated }) => {
     D: "",
   });
 
-  const handleInputChange = (event) => {
-    const { name, value } = event.target;
-    setAnswers({ ...answers, [name]: value });
-  };
-
   useEffect(() => {
     const fetchQuizPapers = async () => {
       const collectionRef = collection(db, "quizpapers");
@@ -64,10 +143,18 @@ const CreateQuestion = ({ toggleModal, quizType, onQuestionCreated }) => {
     fetchQuizPapers();
   }, []);
 
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setAnswers({ ...answers, [name]: value });
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
+    const parser = new DOMParser();
+    const parsedHtml = parser.parseFromString(question, "text/html");
+    const questionText = parsedHtml.body.textContent || "";
     const questionData = {
-      question,
+      question: questionText,
       correct_answer: correctAnswer,
     };
 
@@ -86,7 +173,9 @@ const CreateQuestion = ({ toggleModal, quizType, onQuestionCreated }) => {
       const countDocRef = doc(db, `quizpapers/${selectedQuizPaper.id}`);
       const countDocSnap = await getDoc(countDocRef);
       const currentCount = countDocSnap.data().questions_count || 0;
-      await updateDoc(countDocRef, { questions_count: currentCount + 1 });
+      await updateDoc(countDocRef, {
+        questions_count: currentCount + 1,
+      });
 
       // Thêm các câu trả lời vào collection "answers" trong document của câu hỏi với ID mới
       for (let [identifier, answer] of Object.entries(answers)) {
@@ -116,18 +205,147 @@ const CreateQuestion = ({ toggleModal, quizType, onQuestionCreated }) => {
 
   return (
     <>
-      {/* <div className="header pt-1 md-8"></div> */}
       <Container>
         <Form onSubmit={handleSubmit}>
           <FormGroup>
             <Label for="question">Question</Label>
-            <Input
-              type="textarea"
-              id="question"
-              placeholder="Enter content question"
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              required
+
+            <CKEditor
+              editor={ClassicEditor}
+              config={{
+                plugins: [
+                  AccessibilityHelp,
+                  Alignment,
+                  Autoformat,
+                  AutoImage,
+                  AutoLink,
+                  Autosave,
+                  BlockQuote,
+                  Bold,
+                  CKBox,
+                  CKBoxImageEdit,
+                  CloudServices,
+                  Code,
+                  CodeBlock,
+                  Essentials,
+                  FindAndReplace,
+                  FontBackgroundColor,
+                  FontColor,
+                  FontFamily,
+                  FontSize,
+                  FullPage,
+                  GeneralHtmlSupport,
+                  Heading,
+                  Highlight,
+                  HorizontalLine,
+                  HtmlComment,
+                  HtmlEmbed,
+                  ImageBlock,
+                  ImageCaption,
+                  ImageInline,
+                  ImageInsert,
+                  ImageInsertViaUrl,
+                  ImageResize,
+                  ImageStyle,
+                  ImageTextAlternative,
+                  ImageToolbar,
+                  ImageUpload,
+                  Indent,
+                  IndentBlock,
+                  Italic,
+                  Link,
+                  LinkImage,
+                  List,
+                  ListProperties,
+                  Markdown,
+                  MediaEmbed,
+                  PageBreak,
+                  Paragraph,
+                  PasteFromMarkdownExperimental,
+                  PasteFromOffice,
+                  PictureEditing,
+                  RemoveFormat,
+                  SelectAll,
+                  ShowBlocks,
+                  SourceEditing,
+                  SpecialCharacters,
+                  SpecialCharactersArrows,
+                  SpecialCharactersCurrency,
+                  SpecialCharactersEssentials,
+                  SpecialCharactersLatin,
+                  SpecialCharactersMathematical,
+                  SpecialCharactersText,
+                  Strikethrough,
+                  Style,
+                  Subscript,
+                  Superscript,
+                  Table,
+                  TableCaption,
+                  TableCellProperties,
+                  TableColumnResize,
+                  TableProperties,
+                  TableToolbar,
+                  TextTransformation,
+                  TodoList,
+                  Underline,
+                  Undo,
+                ],
+                toolbar: {
+                  items: [
+                    "undo",
+                    "redo",
+                    "|",
+                    "sourceEditing",
+                    "showBlocks",
+                    "findAndReplace",
+                    "selectAll",
+                    "|",
+                    "heading",
+                    "style",
+                    "|",
+                    "fontSize",
+                    "fontFamily",
+                    "fontColor",
+                    "fontBackgroundColor",
+                    "|",
+                    "bold",
+                    "italic",
+                    "underline",
+                    "strikethrough",
+                    "subscript",
+                    "superscript",
+                    "code",
+                    "removeFormat",
+                    "|",
+                    "specialCharacters",
+                    "horizontalLine",
+                    "pageBreak",
+                    "link",
+                    "insertImage",
+                    "ckbox",
+                    "mediaEmbed",
+                    "insertTable",
+                    "highlight",
+                    "blockQuote",
+                    "codeBlock",
+                    "htmlEmbed",
+                    "|",
+                    "alignment",
+                    "|",
+                    "bulletedList",
+                    "numberedList",
+                    "todoList",
+                    "indent",
+                    "outdent",
+                    "|",
+                    "accessibilityHelp",
+                  ],
+                  shouldNotGroupWhenFull: true,
+                },
+              }}
+              data="Enter content question!"
+              onReady={(editor) => {}}
+              onChange={(event, editor) => setQuestion(editor.getData())}
             />
           </FormGroup>
 
@@ -242,4 +460,4 @@ const CreateQuestion = ({ toggleModal, quizType, onQuestionCreated }) => {
   );
 };
 
-export default CreateQuestion;
+export default CreateQuestionM;

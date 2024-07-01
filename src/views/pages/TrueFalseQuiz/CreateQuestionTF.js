@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { db } from "../../firebase/firebase";
+import { db } from "../../../firebase/firebase";
 import {
   collection,
   addDoc,
@@ -26,7 +26,7 @@ import {
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const CreateQuestion = ({ toggleModal, quizType, onQuestionCreated }) => {
+const CreateQuestionTF = ({ toggleModal, quizType, onQuestionCreated }) => {
   const [type, setType] = useState(quizType || "");
   const [correctAnswer, setCorrectAnswer] = useState("");
   const [typeData, setTypeData] = useState([]);
@@ -40,8 +40,6 @@ const CreateQuestion = ({ toggleModal, quizType, onQuestionCreated }) => {
   const [answers, setAnswers] = useState({
     A: "",
     B: "",
-    C: "",
-    D: "",
   });
 
   const handleInputChange = (event) => {
@@ -162,37 +160,6 @@ const CreateQuestion = ({ toggleModal, quizType, onQuestionCreated }) => {
             </Col>
           </Row>
 
-          <Row form>
-            <Col md={6}>
-              <FormGroup>
-                <Label for="answerC">Answer C</Label>
-                <Input
-                  type="text"
-                  id="answerC"
-                  name="C"
-                  placeholder="Enter answer C"
-                  value={answers.C}
-                  onChange={handleInputChange}
-                  required
-                />
-              </FormGroup>
-            </Col>
-            <Col md={6}>
-              <FormGroup>
-                <Label for="answerD">Answer D</Label>
-                <Input
-                  type="text"
-                  id="answerD"
-                  name="D"
-                  placeholder="Enter answer D"
-                  value={answers.D}
-                  onChange={handleInputChange}
-                  required
-                />
-              </FormGroup>
-            </Col>
-          </Row>
-
           <FormGroup>
             <Label for="correctAnswer" className="mr-6">
               Answer:
@@ -202,7 +169,7 @@ const CreateQuestion = ({ toggleModal, quizType, onQuestionCreated }) => {
                 {correctAnswer || "Choose answer"}
               </DropdownToggle>
               <DropdownMenu>
-                {["A", "B", "C", "D"].map((option, index) => (
+                {["A", "B"].map((option, index) => (
                   <DropdownItem
                     onClick={() => setCorrectAnswer(option)}
                     key={index}
@@ -242,4 +209,4 @@ const CreateQuestion = ({ toggleModal, quizType, onQuestionCreated }) => {
   );
 };
 
-export default CreateQuestion;
+export default CreateQuestionTF;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../firebase/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import {
   Card,
   CardHeader,
@@ -10,17 +10,20 @@ import {
   Col,
   CardTitle,
 } from "reactstrap";
-import { Line, Bar } from "react-chartjs-2";
+import { Bar, Doughnut } from "react-chartjs-2"; // Import Doughnut chart
 import Chart from "chart.js";
+import moment from "moment";
 
 import { chartOptions, parseOptions } from "variables/charts.js";
+import MyIcon from "../assets/img/icons/true-or-false.png";
 
 const Dashboard = (props) => {
   const [totalDailyQuestions, setTotalDailyQuestions] = useState(0);
-  const [totalHistoricalQuestions, setTotalHistoricalQuestions] = useState(0);
+  const [totalTrueFalseQuestions, setTotalTrueFalseQuestions] = useState(0);
   const [totalMathQuestions, setTotalMathQuestions] = useState(0);
   const [totalExamQuestions, setTotalExamQuestions] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
+  const [userRegistrations, setUserRegistrations] = useState([]);
 
   if (window.Chart) {
     parseOptions(Chart, chartOptions());
@@ -32,12 +35,12 @@ const Dashboard = (props) => {
       const questionsDailySnapshot = await getDocs(questionsDailyRef);
       setTotalDailyQuestions(questionsDailySnapshot.size);
 
-      const questionsHistoricalRef = collection(
+      const questionsTrueFalseRef = collection(
         db,
         "quizpapers/ppr002/questions"
       );
-      const questionsHistoricalSnapshot = await getDocs(questionsHistoricalRef);
-      setTotalHistoricalQuestions(questionsHistoricalSnapshot.size);
+      const questionsTrueFalseSnapshot = await getDocs(questionsTrueFalseRef);
+      setTotalTrueFalseQuestions(questionsTrueFalseSnapshot.size);
 
       const questionsMathRef = collection(db, "quizpapers/ppr003/questions");
       const questionsMathSnapshot = await getDocs(questionsMathRef);
@@ -48,20 +51,88 @@ const Dashboard = (props) => {
       setTotalExamQuestions(questionsExamSnapshot.size);
 
       const usersRef = collection(db, "users");
-      const usersSnapshot = await getDocs(usersRef);
+      const usersQuery = query(usersRef, orderBy("createdAt"));
+      const usersSnapshot = await getDocs(usersQuery);
       setTotalUsers(usersSnapshot.size);
+
+      const registrations = usersSnapshot.docs.map((doc) => ({
+        date: doc.data().createdAt.toDate(),
+        count: 1,
+      }));
+
+      setUserRegistrations(registrations);
     };
 
     fetchData();
   }, []);
 
-  // Tạo dữ liệu cho biểu đồ lượt đăng ký
-  const userData = {
-    labels: ["Total Users"],
+  // Tạo dữ liệu cho biểu đồ lượt đăng ký theo tháng
+  const aggregateRegistrationsByMonth = (registrations) => {
+    const aggregated = registrations.reduce((acc, curr) => {
+      const month = moment(curr.date).format("YYYY-MM");
+      if (!acc[month]) {
+        acc[month] = 0;
+      }
+      acc[month] += curr.count;
+      return acc;
+    }, {});
+
+    const months = Object.keys(aggregated);
+    const counts = Object.values(aggregated);
+
+    return { months, counts };
+  };
+
+  const { months, counts } = aggregateRegistrationsByMonth(userRegistrations);
+
+  // Dữ liệu cho biểu đồ hình tròn
+  const totalQuestions =
+    totalDailyQuestions +
+    totalTrueFalseQuestions +
+    totalMathQuestions +
+    totalExamQuestions;
+  const dataPie = {
+    labels: ["Daily", "True/False", "Math", "Exam"],
     datasets: [
       {
-        label: "Total Users",
-        data: [totalUsers],
+        label: "Question Types",
+        data: [
+          ((totalDailyQuestions / totalQuestions) * 100).toFixed(2),
+          ((totalTrueFalseQuestions / totalQuestions) * 100).toFixed(2),
+          ((totalMathQuestions / totalQuestions) * 100).toFixed(2),
+          ((totalExamQuestions / totalQuestions) * 100).toFixed(2),
+        ],
+        backgroundColor: [
+          "rgba(255, 99, 132, 0.6)",
+          "rgba(54, 162, 235, 0.6)",
+          "rgba(255, 206, 86, 0.6)",
+          "rgba(75, 192, 192, 0.6)",
+        ],
+        borderColor: [
+          "rgba(255, 99, 132, 1)",
+          "rgba(54, 162, 235, 1)",
+          "rgba(255, 206, 86, 1)",
+          "rgba(75, 192, 192, 1)",
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const optionsPie = {
+    plugins: {
+      legend: {
+        position: "top",
+      },
+    },
+  };
+
+  const userData = {
+    labels: months,
+    datasets: [
+      {
+        label: "User Registrations",
+        data: counts,
         backgroundColor: "rgba(75,192,192,0.4)",
         borderColor: "rgba(75,192,192,1)",
         borderWidth: 1,
@@ -75,6 +146,12 @@ const Dashboard = (props) => {
     scales: {
       y: {
         beginAtZero: true,
+      },
+      x: {
+        type: "time",
+        time: {
+          unit: "month",
+        },
       },
     },
   };
@@ -103,7 +180,7 @@ const Dashboard = (props) => {
                       </div>
                       <Col className="col-auto">
                         <div className="icon icon-shape bg-danger text-white rounded-circle shadow">
-                          <i className="fas fa-chart-bar" />
+                          <i className="fa-solid fa-clipboard-question"></i>
                         </div>
                       </Col>
                     </Row>
@@ -119,15 +196,19 @@ const Dashboard = (props) => {
                           tag="h5"
                           className="text-uppercase text-muted mb-0"
                         >
-                          Total historical question
+                          Total True/False question
                         </CardTitle>
                         <span className="h2 font-weight-bold mb-0">
-                          {totalHistoricalQuestions}
+                          {totalTrueFalseQuestions}
                         </span>
                       </div>
                       <Col className="col-auto">
                         <div className="icon icon-shape bg-warning text-white rounded-circle shadow">
-                          <i className="fas fa-chart-pie" />
+                          <img
+                            src={MyIcon}
+                            alt="My Icon"
+                            style={{ width: "100%", height: "100%" }}
+                          />
                         </div>
                       </Col>
                     </Row>
@@ -151,7 +232,7 @@ const Dashboard = (props) => {
                       </div>
                       <Col className="col-auto">
                         <div className="icon icon-shape bg-yellow text-white rounded-circle shadow">
-                          <i className="fas fa-users" />
+                          <i className="fa-solid fa-calculator"></i>
                         </div>
                       </Col>
                     </Row>
@@ -175,7 +256,7 @@ const Dashboard = (props) => {
                       </div>
                       <Col className="col-auto">
                         <div className="icon icon-shape bg-info text-white rounded-circle shadow">
-                          <i className="fas fa-percent" />
+                          <i className="fa-solid fa-file-circle-question"></i>
                         </div>
                       </Col>
                     </Row>
@@ -195,14 +276,14 @@ const Dashboard = (props) => {
                         </CardTitle>
                         <span className="h2 font-weight-bold mb-0">
                           {totalDailyQuestions +
-                            totalHistoricalQuestions +
+                            totalTrueFalseQuestions +
                             totalMathQuestions +
                             totalExamQuestions}
                         </span>
                       </div>
                       <Col className="col-auto">
-                        <div className="icon icon-shape bg-info text-white rounded-circle shadow">
-                          <i className="fas fa-percent" />
+                        <div className="icon icon-shape bg-primary text-white rounded-circle shadow">
+                          <i className="fa-solid fa-question"></i>
                         </div>
                       </Col>
                     </Row>
@@ -225,8 +306,8 @@ const Dashboard = (props) => {
                         </span>
                       </div>
                       <Col className="col-auto">
-                        <div className="icon icon-shape bg-info text-white rounded-circle shadow">
-                          <i className="fas fa-percent" />
+                        <div className="icon icon-shape bg-success text-white rounded-circle shadow">
+                          <i className="fa-solid fa-users"></i>
                         </div>
                       </Col>
                     </Row>
@@ -240,19 +321,28 @@ const Dashboard = (props) => {
       {/* Page content */}
       <Container className="mt--7" fluid>
         <Row>
-          <Col xl="12">
+          <Col xl="6">
             <Card className="shadow">
               <CardHeader className="bg-transparent">
-                <Row className="align-items-center">
-                  <div className="col">
-                    <h2 className="mb-0">User Registrations</h2>
-                  </div>
-                </Row>
+                <h2 className="mb-0">User Registrations</h2>
               </CardHeader>
               <CardBody>
-                {/* Chart */}
+                {/* Bar Chart */}
                 <div className="chart">
                   <Bar data={userData} options={userOptions} />
+                </div>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xl="6">
+            <Card className="shadow">
+              <CardHeader className="bg-transparent">
+                <h2 className="mb-0">Question</h2>
+              </CardHeader>
+              <CardBody>
+                {/* Doughnut Chart */}
+                <div className="chart">
+                  <Doughnut data={dataPie} options={optionsPie} />
                 </div>
               </CardBody>
             </Card>

@@ -19,11 +19,14 @@ import { doSignInWithEmailAndPassWord } from "../../firebase/auth";
 import background from "../../assets/img/theme/background.jpg";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useAuth } from "../../layouts/useAuth";
+import { Navigate } from "react-router-dom";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
+  const { currentUser } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -38,6 +41,10 @@ const Login = () => {
       toast.error("Invalid username or password. Please try again.");
     }
   };
+
+  if (currentUser) {
+    return <Navigate to="/admin/dashboard" />;
+  }
 
   return (
     <>

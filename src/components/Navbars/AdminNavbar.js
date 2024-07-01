@@ -1,4 +1,4 @@
-import { Link  } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { doSignOut } from "../../firebase/auth";
 // reactstrap components
 import {
@@ -21,25 +21,21 @@ import React, { useState, useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../firebase/firebase";
 
-
-
 const AdminNavbar = (props) => {
-
   const [user, setUser] = useState(null);
 
-
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth,(currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
     });
     return () => unsubscribe();
-  },[])
+  }, []);
 
-  const handleLogout = async  () => {
-    try{
+  const handleLogout = async () => {
+    try {
       await doSignOut();
-    }catch (error){
-      console.error("Error logging out: ", error)
+    } catch (error) {
+      console.error("Error logging out: ", error);
     }
   };
 
@@ -59,12 +55,13 @@ const AdminNavbar = (props) => {
                 <Media className="align-items-center">
                   <span className="avatar avatar-sm rounded-circle">
                     {user && user.photoURL ? (
-                      <img alt="..." src={user.photoURL}/>
-                    ):(<img
-                      alt="..."
-                      src={require("../../assets/img/icons/admin.png")}
-                    />)}
-                    
+                      <img alt="..." src={user.photoURL} />
+                    ) : (
+                      <img
+                        alt="..."
+                        src={require("../../assets/img/icons/admin.png")}
+                      />
+                    )}
                   </span>
                   <Media className="ml-2 d-none d-lg-block">
                     <span className="mb-0 text-sm font-weight-bold">
@@ -80,11 +77,11 @@ const AdminNavbar = (props) => {
                 <DropdownItem to="/admin/change-password" tag={Link}>
                   <i className="ni ni-settings-gear-65" />
                   <span>Change password</span>
-                </DropdownItem>             
+                </DropdownItem>
                 <DropdownItem divider />
-                <DropdownItem href="#pablo" onClick={() =>  handleLogout()}>
+                <DropdownItem href="#pablo" onClick={() => handleLogout()}>
                   <i className="ni ni-user-run" />
-                  <span>Logout</span>
+                  <span>Sign out</span>
                 </DropdownItem>
               </DropdownMenu>
             </UncontrolledDropdown>
